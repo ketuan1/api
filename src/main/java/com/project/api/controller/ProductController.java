@@ -6,7 +6,7 @@ import com.project.api.dto.ProductDto;
 import com.project.api.dto.ProductRequest;
 import com.project.api.entity.Category;
 import com.project.api.entity.Product;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
+// import org.omg.CosNaming.NamingContextPackage.NotFound;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/product")
-@CrossOrigin("http://localhost:3000")
+@RequestMapping("/api/products")
+@CrossOrigin("*")
 public class ProductController {
 
     private ProductRepository productRepository;
@@ -33,7 +33,7 @@ public class ProductController {
                              CategoryRepository categoryRepository,
                              FileController fileController) {
         this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
+        // this.categoryRepository = categoryRepository;
         this.fileController = fileController;
     }
 
