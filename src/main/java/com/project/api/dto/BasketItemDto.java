@@ -1,7 +1,10 @@
 package com.project.api.dto;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 
+@Data
 public class BasketItemDto {
     private Long productId;
 

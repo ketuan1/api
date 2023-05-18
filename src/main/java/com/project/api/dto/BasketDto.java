@@ -8,7 +8,7 @@ import java.util.List;
 public class BasketDto {
     private Long id;
 
-    private Long user_id;
+    private String email;
 
     private List<BasketItemDto> basketItem;
 }

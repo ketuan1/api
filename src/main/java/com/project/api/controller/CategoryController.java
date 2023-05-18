@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.NoResultException;
 import java.util.List;
 
 @RestController
@@ -28,15 +29,20 @@ public class CategoryController {
         return new ResponseEntity<>(listCategory, HttpStatus.OK);
     }
 
-    @GetMapping("/{categoryId}") // Get Category Id
+    @GetMapping("/{categoryId}") // Get Category ID
     public ResponseEntity<Category> getCategoryById(@PathVariable("categoryId") Long categoryId) {
         Category category = categoryRepository.findById(categoryId).get();
+
+        if (category == null) {
+            throw new NoResultException("This category not exists");
+        }
+
         return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
     @PostMapping("/add") // Insert/Add Category
     public ResponseEntity<Category> createCategory(@RequestBody Category category) {
-        Category existCategory = categoryRepository.findByName(category.getCategoryName());
+        Category existCategory = categoryRepository.findByCategoryName(category.getCategoryName());
 
         if (existCategory == null) {
             Category newCategory = categoryRepository.save(category);
@@ -44,8 +50,6 @@ public class CategoryController {
         } else {
             throw new ResponseStatusException(HttpStatus.ALREADY_REPORTED, "Category already exits");
         }
-
-
     }
 
     @PutMapping("/update/{categoryId}") // Edit Category

@@ -36,39 +36,19 @@ public class FileController {
         }
     }
 
-//    @PostMapping("/upload") // Upload Image
-//    public ResponseEntity<String> uploadFile(@RequestParam("imageUrl") MultipartFile file) {
-//        String message;
-//
-//        try {
-//            Files.copy(file.getInputStream(), Paths.get("upload/image").resolve(file.getOriginalFilename()));
-//
-//            message = "Upload successfully: " + file.getOriginalFilename();
-//            return new ResponseEntity<>(message, HttpStatus.OK);
-//        } catch (Exception e) {
-//            message = "Upload failed: " + file.getOriginalFilename();
-//            return new ResponseEntity<>(message, HttpStatus.EXPECTATION_FAILED);
-//        }
-//    }
+    @PostMapping("/upload") // Upload Image (front-end need call this api if want upload file)
+    public ResponseEntity<String> uploadFile(@RequestParam("imageUrl") MultipartFile file) {
+        String message;
 
-    public String uploadFile(MultipartFile file) {
         try {
-            Path uploadDir = Paths.get("upload/image");
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-            Path filePath = uploadDir.resolve(file.getOriginalFilename());
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), Paths.get("upload/image").resolve(file.getOriginalFilename()));
 
-            String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/upload/image")
-                    .path(file.getOriginalFilename())
-                    .toUriString();
-            return imageUrl;
+            message = "Upload successfully: " + file.getOriginalFilename();
+            return new ResponseEntity<>(message, HttpStatus.OK);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload image", e);
+            message = "Upload failed: " + file.getOriginalFilename();
+            return new ResponseEntity<>(message, HttpStatus.EXPECTATION_FAILED);
         }
-
     }
 
     @DeleteMapping(value = "/image/{filename}") // Delete Image
