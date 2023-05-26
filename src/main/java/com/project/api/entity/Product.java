@@ -40,12 +40,12 @@ public class Product {
     @CreationTimestamp
     private Date lastUpdated;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     @JsonIgnore
     private Category category;
 
-    @OneToMany(mappedBy = "products", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "products", cascade = CascadeType.PERSIST)
     private Set<BasketItem> basketItems;
 
     public Product() {

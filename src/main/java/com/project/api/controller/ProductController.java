@@ -19,9 +19,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+@CrossOrigin(origins = "http://localhost:3000",allowedHeaders = "*", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin("http://localhost:3000")
 public class ProductController {
 
     private ProductRepository productRepository;
@@ -33,7 +34,7 @@ public class ProductController {
                              CategoryRepository categoryRepository,
                              FileController fileController) {
         this.productRepository = productRepository;
-        // this.categoryRepository = categoryRepository;
+        this.categoryRepository = categoryRepository;
         this.fileController = fileController;
     }
 
@@ -95,19 +96,14 @@ public class ProductController {
     @PutMapping("/update/{productId}") // Edit Product
     public ResponseEntity<Product> updateProduct(@RequestBody ProductRequest product,
                                                  @PathVariable("productId") Long productId) {
-        Long categoryId = product.getCategoryId();
-        Category category = categoryRepository.findById(categoryId).get();
-
         Product existProduct = productRepository.findById(productId).get();
 
         if (existProduct != null) {
             existProduct.setName(product.getName());
             existProduct.setPrice(product.getPrice());
             existProduct.setDescription(product.getDescription());
-            existProduct.setImageUrl(product.getImageUrl());
             existProduct.setUnitsInStock(product.getUnitsInStock());
             existProduct.setLastUpdated(new Date());
-            existProduct.setCategory(category);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not exist");
         }

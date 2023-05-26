@@ -21,8 +21,8 @@ import com.project.api.dao.RegisterRepository;
 import com.project.api.dto.RegisterDto;
 import com.project.api.entity.Register;
 
+@CrossOrigin(origins = "http://localhost:3000",allowedHeaders = "*", allowCredentials = "true")
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api")
 public class RegisterController {
     BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();

@@ -11,9 +11,9 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.persistence.NoResultException;
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000",allowedHeaders = "*", allowCredentials = "true")
 @RestController
 @RequestMapping("api/category")
-@CrossOrigin("http://localhost:3000")
 public class CategoryController {
 
     private CategoryRepository categoryRepository;

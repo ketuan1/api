@@ -21,11 +21,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-
+@CrossOrigin(origins = "http://localhost:3000",allowedHeaders = "*", allowCredentials = "true")
 @RestController
 @RequestMapping("api/baskets")
-@CrossOrigin("http://localhost:3000")
 public class BasketController {
     private final ProductRepository productRepository;
 
@@ -36,7 +36,6 @@ public class BasketController {
     private final UserRepository userRepository;
 
     @Autowired
-
     public BasketController(ProductRepository productRepository,
                             BasketItemRepository basketItemRepository,
                             BasketRepository basketRepository, UserRepository userRepository) {
@@ -54,9 +53,7 @@ public class BasketController {
         if (basketList.isEmpty()) {
             throw new NoResultException("Can't found the basket");
         }
-
-        List<BasketItemDto> basketItemDtoList = basketList.get(0).getBasketItems().stream()
-                .map(item -> new BasketItemDto(
+        List<BasketItemDto> basketItemDtoList = basketItemRepository.findByBasketId(basketList.get(0).getId()).stream().map(item -> new BasketItemDto(
                         item.getProducts().getId(),
                         item.getProducts().getName(),
                         item.getProducts().getPrice(),
@@ -66,7 +63,6 @@ public class BasketController {
                 ))
                 .sorted(Comparator.comparingLong(i -> i.getProductId()))
                 .collect(Collectors.toList());
-
         BasketDto basketDto = new BasketDto();
         basketDto.setId(basketList.get(0).getId());
         basketDto.setEmail(basketList.get(0).getUser().getEmail());
@@ -93,6 +89,7 @@ public class BasketController {
             cookie.setMaxAge(30 * 24 * 60 * 60); // expired in 30 days
             cookie.setPath("/");
             response.addCookie(cookie);
+            basketRepository.save(basket);
         } else {
             basket = basketList.get(0);
         }
@@ -102,17 +99,30 @@ public class BasketController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This product not enough quantity");
         }
 
-
-        basket.addItem(product, quantity);
-        Basket returnBasket = basketRepository.save(basket);
-
+        BasketItem basketItem = basketItemRepository.findByBasketIdAndProducts(basket.getId(),product);
+        if(basketItem==null){
+            basketItem = new BasketItem();
+        }
+        basketItem.setBasket(basket);
+        basketItem.setProducts(product);
+        basketItem.setQuantity(basketItem.getQuantity()+quantity);
+        if (basketItem.getQuantity()<=0){
+            basketItemRepository.delete(basketItem);
+            List<BasketItemDto> lsBacketItemDto = convert(basketItemRepository.findByBasketId(basketList.get(0).getId()));
+            BasketDto basketDto = convert(basket,lsBacketItemDto);
+            return new ResponseEntity<>(basketDto, HttpStatus.OK);
+        }else {
+        basketItemRepository.save(basketItem);
         // This is when add product to basket, product UnitsInStock will reduce equal quantity
         product.setUnitsInStock(product.getUnitsInStock() - quantity);
         productRepository.save(product);
-
-        // Transform to DTO
-        List<BasketItemDto> basketItemDtoList = returnBasket.getBasketItems().stream()
-                .map(item -> new BasketItemDto(
+        List<BasketItemDto> lsBacketItemDto = convert(basketItemRepository.findByBasketId(basketList.get(0).getId()));
+        BasketDto basketDto = convert(basket,lsBacketItemDto);
+        return new ResponseEntity<>(basketDto, HttpStatus.OK);
+        }
+    }
+    private List<BasketItemDto> convert(List<BasketItem> basketItemList){
+        return basketItemList.stream().map(item -> new BasketItemDto(
                         item.getProducts().getId(),
                         item.getProducts().getName(),
                         item.getProducts().getPrice(),
@@ -122,67 +132,12 @@ public class BasketController {
                 ))
                 .sorted(Comparator.comparingLong(i -> i.getProductId()))
                 .collect(Collectors.toList());
-
-        BasketDto basketDto = new BasketDto();
-        basketDto.setId(returnBasket.getId());
-        basketDto.setEmail(returnBasket.getUser().getEmail());
-        basketDto.setBasketItem(basketItemDtoList);
-
-        return new ResponseEntity<>(basketDto, HttpStatus.OK);
     }
-
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<BasketDto> removeBasketItem(@PathVariable("userId") Long userId,
-                                                      @RequestParam("productId") Long productId,
-                                                      @RequestParam("quantity") int quantity) {
-        User user =  userRepository.findById(userId).get();
-        Product product = productRepository.findById(productId).get();
-        List<Basket> basketList = basketRepository.findByUser(user);
-
-        if (basketList.isEmpty()) {
-            throw new NoResultException("can't find any basket");
-        }
-
-        Basket basket = basketList.get(0);
-        BasketItem existingItem = basket.getBasketItems().stream()
-                .filter(i -> i.getProducts().getId().equals(productId))
-                .findAny().orElse(null);
-
-        if (existingItem == null) {
-            throw new NoResultException("Basket no this item");
-        }
-
-        // If quantity over 1 only reduce quantity, else equal 0 will remove from basket
-        int newQuantity = existingItem.getQuantity() - quantity;
-        existingItem.setQuantity(newQuantity);
-
-        if (newQuantity == 0) {
-            basket.getBasketItems().remove(existingItem);
-            basketItemRepository.delete(existingItem);
-        }
-
-        // This is when remove product, product UnitsInStock will increase equal quantity
-        product.setUnitsInStock(product.getUnitsInStock() + quantity);
-        productRepository.save(product);
-
-        Basket returnBasket = basketRepository.save(basket);
-
-        // Transform to DTO
-        List<BasketItemDto> basketItemDtoList = returnBasket.getBasketItems().stream()
-                .map(item -> new BasketItemDto(
-                        item.getProducts().getId(),
-                        item.getProducts().getName(),
-                        item.getProducts().getPrice(),
-                        item.getProducts().getImageUrl(),
-                        item.getProducts().getCategory().getCategoryName(),
-                        item.getQuantity()
-                )).collect(Collectors.toList());
-
+    private BasketDto convert(Basket basket, List<BasketItemDto> basketItemDtoList){
         BasketDto basketDto = new BasketDto();
-        basketDto.setId(returnBasket.getId());
-        basketDto.setEmail(returnBasket.getUser().getEmail());
+        basketDto.setId(basket.getId());
+        basketDto.setEmail(basket.getUser().getEmail());
         basketDto.setBasketItem(basketItemDtoList);
-
-        return new ResponseEntity<>(basketDto, HttpStatus.OK);
+        return basketDto;
     }
 }

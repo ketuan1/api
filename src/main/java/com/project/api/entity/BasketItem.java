@@ -16,12 +16,12 @@ public class BasketItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, targetEntity = Basket.class)
+    @ManyToOne(cascade = CascadeType.PERSIST, targetEntity = Basket.class)
     @JoinColumn(name = "basket_id", referencedColumnName = "id")
     @JsonIgnore
     private Basket basket;
 
-    @ManyToOne(cascade = CascadeType.ALL, targetEntity = Product.class)
+    @ManyToOne(cascade = CascadeType.PERSIST, targetEntity = Product.class)
     @JoinColumn(name = "product_id", referencedColumnName = "id")
     @JsonIgnore
     private Product products;
